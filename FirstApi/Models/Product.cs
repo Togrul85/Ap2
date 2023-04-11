@@ -13,6 +13,12 @@ namespace FirstApi.Models
 
         public bool IsActive { get; set; }
 
+        public bool IsDeleted { get; set; }
+
+
+
+
+
 
     }
 }

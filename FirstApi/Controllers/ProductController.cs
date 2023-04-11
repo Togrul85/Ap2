@@ -3,6 +3,7 @@ using FirstApi.Dtos.ProductDtos;
 using FirstApi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace FirstApi.Controllers
 {
@@ -19,8 +20,25 @@ namespace FirstApi.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            var products = _appDbContext.Products.ToList();
-            return StatusCode(200, products);
+            var products = _appDbContext.Products
+                .Where(p=>p.IsDeleted)
+                .ToList();
+
+            ProductListDto productListDto = new ();
+            productListDto.TotalCount= products.Count;
+            List<ProductListItemDto> listitemDto = new();
+            foreach (var item in products)
+            {
+                ProductListItemDto productListItemDto= new();
+                productListItemDto.Name= item.Name;
+                productListItemDto.CostPrice= item.CostPrice;
+                productListItemDto.SalePrice= item.SalePrice;
+                productListItemDto.CreatedDate= item.CreatedDate;
+                productListItemDto.UpdateDate= item.UpdateDate;
+                listitemDto.Add(productListItemDto);
+            }
+            productListDto.Items = listitemDto;
+            return StatusCode(200, productListDto);
             //return Ok(new {Code=1001,products});
         }
 
@@ -29,10 +47,23 @@ namespace FirstApi.Controllers
         public IActionResult GetOne(int id)
 
         {
-            Product product = _appDbContext.Products.FirstOrDefault(p => p.Id == id);
-            if (product == null) return StatusCode(StatusCodes.Status404NotFound);
+            Product product = _appDbContext.Products
+                .Where(p=>!p.IsDeleted)
+                .FirstOrDefault(p => p.Id == id);
 
-            return Ok(product);
+            if (product == null) return StatusCode(StatusCodes.Status404NotFound);
+            ProductReturnDto productReturnDto = new() 
+            { 
+            Name = product.Name,
+            SalePrice= product.SalePrice,
+            CostPrice= product.CostPrice,
+            CreatedDate= product.CreatedDate,
+            UpdateDate= product.UpdateDate,
+
+
+            };
+
+            return Ok(productReturnDto);
         }
         [HttpPost]
         public IActionResult AddProduct(ProductCreateDto productCreateDto)
